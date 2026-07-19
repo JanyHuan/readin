@@ -30,6 +30,13 @@ jobs:
           FEISHU_REFRESH_TOKEN: ${{ secrets.FEISHU_REFRESH_TOKEN }}
         run: node build_data.mjs
 
+      - name: 持久化 refresh_token（防止飞书令牌轮换后失效）
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          npm install libsodium-wrappers --no-save
+          node persist_refresh_token.cjs
+
       - name: 提交变更
         run: |
           git config user.name "github-actions[bot]"

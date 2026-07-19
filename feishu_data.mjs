@@ -48,7 +48,14 @@ async function getUserTokenByRefresh() {
       }),
     });
     const j = await r.json();
-    if (j.code === 0 && j.access_token) return j.access_token;
+    const data = j.data || j;
+    if (j.code === 0 && data.access_token) {
+      // 飞书 refresh_token 每次刷新都会轮换：把新令牌写回文件，供工作流持久化到 Secrets（避免下次失效）
+      if (process.env.GITHUB_ACTIONS && data.refresh_token) {
+        try { fs.writeFileSync(path.join(__dirname, '.new_refresh_token'), String(data.refresh_token)); } catch {}
+      }
+      return data.access_token;
+    }
     console.warn('refresh_token 失效，转 tenant:', j.msg);
   } catch (e) {
     console.warn('refresh 失败:', e.message);
