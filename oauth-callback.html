@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>授权成功 · 复制 code</title>
+<style>
+ body{font-family:-apple-system,system-ui,"PingFang SC",sans-serif;max-width:680px;margin:9vh auto;padding:0 20px;color:#2b2b2b;line-height:1.7}
+ h1{font-size:22px;margin-bottom:6px}
+ .box{margin:18px 0;padding:16px;background:#f6f3ec;border:1px solid #e3dccb;border-radius:10px;font-family:ui-monospace,Menlo,monospace;font-size:14px;word-break:break-all;min-height:24px}
+ button{background:#1d6eff;color:#fff;border:0;padding:12px 22px;border-radius:8px;font-size:15px;cursor:pointer}
+ button:active{transform:translateY(1px)}
+ .ok{color:#2e7d32;font-weight:600}
+ .err{color:#c62828}
+ .muted{color:#888;font-size:13px}
+</style>
+</head>
+<body>
+<h1>🔑 飞书授权回调页</h1>
+<p id="tip">正在读取授权结果…</p>
+<div id="codeBox" class="box" style="display:none"></div>
+<button id="copyBtn" style="display:none" onclick="copyCode()">📋 复制 code</button>
+<p class="muted">把上面的 code 整段发给 WorkBuddy 即可，它会自动完成后续配置。</p>
+<script>
+ const p=new URLSearchParams(location.search);
+ const code=p.get('code');
+ const err=p.get('error');
+ const desc=p.get('error_description');
+ const tip=document.getElementById('tip');
+ const box=document.getElementById('codeBox');
+ const btn=document.getElementById('copyBtn');
+ if(err){
+   tip.innerHTML='<span class="err">❌ 授权出错：'+err+(desc?(' — '+desc):'')+'</span>';
+ } else if(code){
+   tip.innerHTML='<span class="ok">✅ 授权成功！请复制下面的 code 发给 WorkBuddy：</span>';
+   box.style.display='block'; box.textContent=code;
+   btn.style.display='inline-block';
+ } else {
+   tip.innerHTML='<span class="err">⚠️ 地址栏里没有 code 参数，请确认是从飞书授权后跳转过来的。</span>';
+ }
+ function copyCode(){
+   navigator.clipboard.writeText(code).then(()=>{
+     btn.textContent='✅ 已复制';
+     setTimeout(()=>btn.textContent='📋 复制 code',2000);
+   });
+ }
+</script>
+</body>
+</html>
