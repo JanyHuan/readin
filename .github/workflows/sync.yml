@@ -1,0 +1,43 @@
+# .github/workflows/sync.yml
+# 定时从飞书多维表格拉取读书笔记，生成静态 data/books.json + covers/，并提交到仓库。
+# GitHub Pages 直接托管这些静态文件，无需任何服务器。
+name: Sync Feishu → books.json
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # 每 30 分钟同步一次（GitHub 最短粒度）
+  workflow_dispatch: {}      # 允许在 Actions 页面手动「Run workflow」立即同步
+
+permissions:
+  contents: write            # 允许 Action 提交 data/ 与 covers/
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 拉取飞书数据并生成静态文件
+        env:
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_REFRESH_TOKEN: ${{ secrets.FEISHU_REFRESH_TOKEN }}
+        run: node build_data.mjs
+
+      - name: 提交变更
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ covers/ || true
+          if git diff --cached --quiet; then
+            echo "无变化，跳过提交"
+          else
+            git commit -m "chore: 同步飞书读书笔记 $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+          fi

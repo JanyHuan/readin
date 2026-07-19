@@ -1,0 +1,21 @@
+# 不要提交敏感凭证
+.env
+.user_token.json
+
+# 本地工作记忆（非网站文件）
+.workbuddy/
+
+# 依赖（本项目零依赖，不需要）
+node_modules/
+
+# 系统文件
+.DS_Store
+
+# 开发调试脚本（非网站运行所需，避免推上仓库）
+explore_wiki.mjs
+fetch_real_data.mjs
+inspect_notes.mjs
+list_tables.mjs
+test_feishu.mjs
+test_token.mjs
+.feishu_real_data.json
