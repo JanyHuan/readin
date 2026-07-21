@@ -28,6 +28,15 @@ const env = loadEnv();
 const FEISHU_APP_ID = process.env.FEISHU_APP_ID || env.FEISHU_APP_ID;
 const FEISHU_APP_SECRET = process.env.FEISHU_APP_SECRET || env.FEISHU_APP_SECRET;
 
+// --- 启动校验 ---
+if (!FEISHU_APP_ID || !FEISHU_APP_SECRET) {
+  throw new Error(
+    '缺少飞书凭证：FEISHU_APP_ID 或 FEISHU_APP_SECRET 未设置。\n' +
+    '  本地运行：确保 .env 文件存在且包含这两个变量。\n' +
+    '  GitHub Actions：检查 Secrets 中是否配置了 FEISHU_APP_ID 和 FEISHU_APP_SECRET。'
+  );
+}
+
 // ---------- token 获取 ----------
 // 优先：用 refresh_token（非交互）刷新出 user_access_token（用户身份，已生效权限）
 async function getUserTokenByRefresh() {
@@ -78,7 +87,18 @@ async function getTenantToken() {
 async function getToken() {
   const t = await getUserTokenByRefresh();
   if (t) return t;
-  return await getTenantToken();
+  // refresh_token 失败，回退到应用身份（通常因权限未发布而失败）
+  console.warn('⚠️ user_access_token 获取失败，尝试 tenant_access_token（应用身份）…');
+  try {
+    return await getTenantToken();
+  } catch (e) {
+    throw new Error(
+      '所有令牌获取方式均失败：\n' +
+      '  1) refresh_token 无效或已过期 → 需要重新授权拿新 code\n' +
+      '  2) tenant_access_token 缺少 bitable:app 权限（应用身份需发版审批）\n' +
+      '  原始错误: ' + e.message
+    );
+  }
 }
 
 // ---------- 字段解析 ----------

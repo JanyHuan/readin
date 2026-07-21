@@ -21,7 +21,7 @@ jobs:
       - name: 配置 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20.17.0'
 
       - name: 拉取飞书数据并生成静态文件
         env:
